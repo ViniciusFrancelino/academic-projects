@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMECOM - Dashboard Municípios</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./css/dashboards.css">
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <a href="index.html">
+                    <img src="./assets/logo.png" alt="Simecom">
+                </a>
+            </div>
+
+            <div class="user">
+                <div class="avatar">
+                    <a href="">
+                        <img src="./assets/Group 43.png">
+                    </a>
+                </div>
+                <p>Olá, <span id="nome_usuario">usuário</span>!</p>
+            </div>
+
+            <nav class="menu">
+                <ul>
+                    <li><a href="index.html">
+                            <img src="./assets/home_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="preferencias.html">
+                            <img src="./assets/check_box_padrao.png">
+                            Preferências
+                        </a>
+                    </li>
+                    <li><a href="forum.html">
+                            <img src="./assets/chat_bubble_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Fórum
+                        </a>
+                    </li>
+                    <li class="ativo">
+                        <a href="dashboardSetor.html">
+                            <img src="./assets/space_dashboard_24dp_1F7AE0_FILL0_wght400_GRAD0_opsz24.png">
+                            Dashboards
+                        </a>
+                    </li>
+                    <li class="submenu">
+                        <a href="dashboardSetor.html" class="submenu-item">
+                            Setores
+                        </a>
+                        <a href="dashboardMunicipio.html" class="submenu-item active-text">
+                            Municípios
+                        </a>
+                    </li>
+                    <li><a href="./configuracoes.html">
+                            <img src="./assets/icon_configuracoes.png">
+                            Configurações
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <div class="main">
+            <h1>Municípios <span id="periodoSelecionado">20XY-20YX</span></h1>
+            <div class="cards">
+                <div class="card">
+                    <h4>Selecionar Período</h4>
+                    <select id="select-periodo" class="select">
+                        <option value="">Selecione...</option>
+                        <optgroup label="Ano">
+                            <option value="1997">1997</option>
+                            <option value="1998">1998</option>
+                            <option value="1999">1999</option>
+                            <option value="2000">2000</option>
+                            <option value="2001">2001</option>
+                            <option value="2002">2002</option>
+                            <option value="2003">2003</option>
+                            <option value="2004">2004</option>
+                            <option value="2005">2005</option>
+                            <option value="2006">2006</option>
+                            <option value="2007">2007</option>
+                            <option value="2008">2008</option>
+                            <option value="2009">2009</option>
+                            <option value="2010">2010</option>
+                            <option value="2011">2011</option>
+                            <option value="2012">2012</option>
+                            <option value="2013">2013</option>
+                            <option value="2014">2014</option>
+                            <option value="2015">2015</option>
+                            <option value="2016">2016</option>
+                            <option value="2017">2017</option>
+                            <option value="2018">2018</option>
+                            <option value="2019">2019</option>
+                            <option value="2020">2020</option>
+                            <option value="2021">2021</option>
+                        </optgroup>
+                    </select>
+
+                    <small class="detalhe">Apresenta um período de +5 anos com base na selação</small>
+                </div>
+
+
+
+                <div class="card">
+                    <h4>Selecionar Munícipio</h4>
+                    <div class="select">
+                        <input class="select_estado" type="text" id="cidadeInput" placeholder="Ex: São..."
+                            autocomplete="off">
+                        <div id="suggestions" class="suggestions"></div>
+                    </div>
+                    <small class="detalhe">Município selecionado para dashboard</small>
+                </div>
+                <div class="card">
+                    <h4>Relatório</h4>
+                    <button class="btn-salvar" onclick="gerar_relatorio()">Gerar Relatório</button>
+                </div>
+
+            </div>
+
+            <div class="secao1">
+                <div class="box graficoLinha">
+                    <h3>Situação Anual do Município</h3>
+                    <canvas id="lineChart"></canvas>
+                </div>
+
+                <div class="box tabela">
+                    <h3>Top 10 Municípios Mais Ativos</h3>
+                    <small>Municípios que mais tiveram atividade econômica nos últimos 5 anos</small>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Município</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Top Municípios vindo do Banco -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bottom">
+                <div class="graficoBar box">
+                    <h3>Top 5 Municípios Importação</h3>
+                    <small>Os municípios que mais movimentaram capital nos últimos 5 anos somados</small>
+                    <canvas id="barChart"></canvas>
+                </div>
+                <div class="graficoBar box">
+                    <h3>Top 5 Municípios Exportação</h3>
+                    <small>Os municípios que mais movimentaram capital nos últimos 5 anos somados</small>
+                    <canvas id="barChart2"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/dashboardMunicipio.js"></script>
+    <div class="loading-overlay">
+        <h1>Carregando...</h1> <br>
+        <img class="loadgif" src="./assets/blueLoad.gif">
+    </div>
+</body>
+
+</html>
+<script>
+    nome_usuario.innerHTML = sessionStorage.NOME_USUARIO
+</script>

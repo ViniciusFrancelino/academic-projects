@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./css/cadastro.css">
+  <link rel="icon" href="./assets/imgs/logo.png" type="image/x-icon">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <title>Cadastro</title>
+</head>
+
+<body>
+
+  <div class="container" id="container">
+    <img src="./assets/imgs/sengas.png" class="loga" alt="">
+    <br>
+    <h1>Crie sua conta</h1>
+    <br>
+    <input id="iptCodigo" type="text" placeholder="Codigo da Empresa" name="codigo" maxlength="38">
+    <input id="iptNome" type="text" placeholder="Nome" name="username" maxlength="38" />
+    <input id="iptTelefone" type="text" placeholder="Telefone" name="telefone" maxlength="38" />
+    <input id="iptEmail" type="email" placeholder="Email" name="email" maxlength="95" />
+    <input id="iptSenha" type="password" placeholder="Senha" name="password" maxlength="25" />
+    <input id="iptConfirme" type="password" placeholder="Confirme sua Senha" name="confirm" maxlength="25" />
+    <a class="termo" href="">Termos de uso</a>
+    <button onclick="cadastrar()" type="submit">Criar Conta</button>
+    </form>
+  </div>
+
+  <div class="container1" id="container1">
+    <h2>Bem-vindo de volta!</h2>
+    <p>Para se manter conectado conosco, faça login com suas informações pessoais</p>
+    <button class="botao" onclick="window.location.href='./login.html'">Entrar</button>
+  </div>
+
+  <div id="mensagem_erro"></div>
+</body>
+
+</html>
+
+<script>
+
+  // Array para armazenar empresas cadastradas para validação de código de ativação 
+  let listaEmpresas = [];
+
+  function listarEmpresas() {
+    fetch("/usuarios/listar")
+      .then(r => r.json())
+      .then(empresas => {
+        listaEmpresas = empresas;
+        console.log("Empresas carregadas:", listaEmpresas);
+      })
+      .catch(err => console.error("Erro ao obter empresas:", err));
+  }
+
+  // Carrega as empresas ao abrir a página
+  listarEmpresas();
+
+  
+function validarSenhaSimples(senha){
+    const erros = []
+
+    if(!senha || senha.length < 8) {
+        erros.push("A senha deve ter pelo menos 8 caracteres.");
+    }
+
+    if(!/[A-Z]/.test(senha)) {
+        erros.push("A senha deve ter pelo menos uma letra maiúscula.");
+    }
+
+    if(!/[a-z]/.test(senha)) {
+        erros.push("A senha precisa ter pelo menos uma letra minúscula.");
+    }
+
+    if(!/[0-9]/.test(senha)) {
+        erros.push("A senha precisa ter pelo menos um número.");
+    }
+
+    if(!/[!@#$&*^,.?|<>]/.test(senha)) {
+        erros.push("A senha deve conter pelo menos um caractere especial (ex: ! @ # $).");
+    }
+
+    return {
+        valido: erros.length === 0,
+        erros: erros
+    }; 
+}
+
+function validarEmail(email) {
+  let regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email)
+}
+
+  function cadastrar() {
+    // aguardar();
+
+    //Recupere o valor da nova input pelo nome do id
+    // Agora vá para o método fetch logo abaixo
+    var codigoVar = iptCodigo.value.trim();
+    var nomeVar = iptNome.value.trim();
+    var telefoneVar = iptTelefone.value.trim();
+    var emailVar = iptEmail.value.trim();
+    var senhaVar = iptSenha.value;
+    var confirmacaoSenhaVar = iptConfirme.value;
+
+    telefoneVar = telefoneVar.replace(/\D/g, "");
+
+    // Verificando se há algum campo em branco
+    if (codigoVar == "" || nomeVar == "" || telefoneVar == "" || emailVar == "" || senhaVar == "" || confirmacaoSenhaVar == "") {
+      Swal.fire({
+        icon: "warning",
+        title: "Atenção",
+        text: "Preencha todos os campos!"
+      });
+      return;
+    }
+
+    if (!validarEmail(emailVar)) {
+      Swal.fire({
+        icon: "error",
+        title: "Email inválido",
+        text: "O email deve conter @ e ponto."
+      });
+      return;
+    }
+
+    if (senhaVar !== confirmacaoSenhaVar) {
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: "As senhas estão diferente."
+      });
+      return;
+    }
+
+    const resultadoValidacao = validarSenhaSimples(senhaVar)
+    if(!resultadoValidacao.valido) {
+         Swal.fire({
+        icon: "error",
+        title: "Senha fraca",
+        html: resultadoValidacao.erros.join("<br>")
+      });
+      return false;
+    }
+    // VALIDA CÓDIGO DA EMPRESA 
+    let empresaEncontrada = null;
+
+    for (let i = 0; i < listaEmpresas.length; i++) {
+      if (listaEmpresas[i].codigoEmpresa === codigoVar) {
+        empresaEncontrada = listaEmpresas[i];
+        break;
+      }
+    }
+
+    if (empresaEncontrada == null) {
+      Swal.fire({
+        icon: "error",
+        title: "Código inválido",
+        text: "Este código não está associado a nenhuma empresa registrada."
+      });
+      return;
+    }
+
+    if(telefoneVar.length < 10) {
+      Swal.fire({
+        icon: "error",
+        title: "Telefone inválido",
+        text: "Digite um telefone válido."
+      });
+      return;
+    }
+ 
+
+    let idEmpresa = empresaEncontrada.idEmpresa; // pega ID correto do banco
+
+    //recebe dados do usuario, fica mais facil de passar pro fetch
+    let dadosUsuario = {
+      nome: nomeVar,
+      telefone: telefoneVar,
+      email: emailVar,
+      senha: senhaVar,
+      nivelAcesso: "cliente",
+      codigoEmpresa: codigoVar,
+    };
+    // Enviando o valor da nova input
+    fetch("/usuarios/cadastrar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(dadosUsuario),
+    })
+
+      .then(function (resposta) {
+        console.log("resposta: ", resposta);
+
+        if (resposta.ok) {
+          Swal.fire({
+            icon: "success",
+            title: "Cadastro realizado!",
+            text: "Redirecionando para o login...",
+            showConfirmButton: false,
+            timer: 1500
+          });
+
+          setTimeout(() => {
+            window.location = "login.html";
+          }, "1000");
+
+
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Erro",
+            text: "Não foi possível realizar o cadastro."
+          });
+        }
+      })
+      .catch(function (resposta) {
+        console.log(`#ERRO: ${resposta}`);
+        Swal.fire({
+          icon: "error",
+          title: "Erro inesperado",
+          text: "Ocorreu um problema na conexão."
+        });
+      });
+
+    return false;
+  }
+
+</script>

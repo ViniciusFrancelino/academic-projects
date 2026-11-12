@@ -1,0 +1,152 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    font-family: "Montserrat", sans-serif;
+    background: #f5f1e8;
+    color: #004830;
+    min-height: 100vh;
+}
+
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    background: #004830;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 28px 20px;
+    z-index: 40;
+}
+
+.sidebar-top {
+    text-align: center;
+}
+
+.logo-img {
+    width: 150px;
+    height: auto;
+    display: flex;
+    margin: 0 auto 8px;
+    margin-left: 10px;
+    margin-top: 20px;
+}
+
+.nav {
+    margin-bottom: 100px;
+}
+
+.nav ul {
+    list-style: none;
+    margin-top: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nav a {
+    display: block;
+    color: #dfeee8;
+    text-decoration: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.nav a:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #2da980;
+}
+
+.button-sair {
+    align-items: center;
+    color: #dfeee8;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-right: 19px;
+    border: none;
+    background-color: #004830;
+    font-size: 15px;
+    font-family: "Montserrat", sans-serif;
+}
+
+.button-sair:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #2da980;
+}
+
+
+.reserved {
+    text-align: center;
+    font-size: 9px;
+    color: #aee0d7;
+}
+
+.main-content {
+    margin-left: 260px;
+    padding: 28px;
+    min-height: 100vh;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+
+.tabela {
+    width: 100%;
+    margin-top: 3%;
+    background: #fff;
+    border-collapse: collapse;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tabela th,
+.tabela td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.tabela tr:hover {
+    background-color: #f1f1f1;
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Bases - Bully Edition</title>
+    <!-- estilo css -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Header para logo no canto superior -->
+    <header id="bullylogo">
+        <img src="bully-logo.png">
+    </header>
+
+    <!-- contêiner principal -->
+    <div id="container">
+        <!-- título da página -->
+        <h1>The Bulworth Machine</h1>
+        <!-- entrada de valor -->
+        <input id="inputValue" type="text" placeholder="Digite o valor">
+        <!-- seleção da base -->
+        <select id="inputBase">
+            <option value="decimal">Decimal</option>
+            <option value="hexadecimal">Hexadecimal</option>
+            <option value="octal">Octal</option>
+            <option value="binario">Binário</option>
+        </select>
+        <br><br>
+        <!-- opções de conversão -->
+        <h3>Converter para:</h3>
+        <input type="checkbox" id="convertDecimal"><label for="convertDecimal">Decimal</label>
+        <input type="checkbox" id="convertHexadecimal"><label for="convertHexadecimal">Hexadecimal</label>
+        <input type="checkbox" id="convertOctal"><label for="convertOctal">Octal</label>
+        <input type="checkbox" id="convertBinario"><label for="convertBinario">Binário</label>
+        <br><br>
+        <!-- botão de conversão -->
+        <button onclick="converter()">Converter</button>
+        <!-- saída de resultados -->
+        <div id="output"></div>
+    </div>
+
+    <div class="soundtrack">
+        <audio autoplay controls>
+            <source src="BeachHouse.mp3" type="audio/mpeg">
+            Seu navegador não suporta o elemento áudio.
+        </audio>
+    </div>
+
+</body>
+    <!-- script javascript -->
+    <script src="script.js"></script>
+</html>

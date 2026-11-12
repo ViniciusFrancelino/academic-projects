@@ -1,0 +1,16 @@
+{
+  "importCsvPath": "data/IMP_2022_MUN.csv",
+  "exportCsvPath": "data/EXP_2022_MUN.csv",
+  "tradeType": "BOTH",
+  "yearStart": 2022,
+  "yearEnd": 2022,
+  "monthStart": 2,
+  "monthEnd": 6,
+  "sh4List": [],
+  "countryList": [],
+  "ufList": [],
+  "municipalityList": [],
+  "outputDirectory": "output",
+  "reportTitle": "Relatorio Para Clara",
+  "prompt": "Gere insights iniciais sobre o recorte filtrado, destacando comparação entre importação e exportação, concentração por SH4 e comportamento mensal."
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/preferencias.css">
+    <link rel="icon" href="./assets/logo_simples.png" type="image/png">
+    <title>Preferências | SIMECOM</title>
+    <script src="./js/preferencias1.js" defer></script>
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <a href="index.html">
+                    <img src="./assets/logo.png" alt="Simecom">
+                </a>
+            </div>
+
+            <div class="user">
+                <div class="avatar">
+                    <a href="">
+                        <img src="./assets/Group 43.png">
+                    </a>
+                </div>
+                <p>Olá, <span id="nome_usuario">usuário</span>!</p>
+            </div>
+
+            <nav class="menu">
+                <ul>
+                    <li><a href="index.html">
+                            <img src="./assets/home_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Home
+                        </a>
+                    </li>
+                    <li class="ativo">
+                        <a href="preferencias.html">
+                            <img src="./assets/check_box_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Preferências
+                        </a>
+                    </li>
+                    <li><a href="forum.html">
+                            <img src="./assets/chat_bubble_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Fórum
+                        </a>
+                    </li>
+                    <li><a href="dashboardSetor.html">
+                            <img src="./assets/space_dashboard_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Dashboards
+                        </a>
+                    <li><a href="./configuracoes.html">
+                            <img src="./assets/icon_configuracoes.png">
+                            Configurações
+                        </a>
+                    </li>
+                    <li><a href="./configuracoes_adm.html">
+                            <img src="./assets/config_adm.png">
+                            Área do Administrador
+                        </a>
+                    </li>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+
+            <div class="titulo">
+                <h1>Configure suas preferências</h1>
+                <p>Selecione até 3 preferências para receber alertas e visualizar dashboards personalizados.</p>
+            </div>
+
+            <section class="card">
+
+                <div id="prefs-container">
+                    <div class="preferencia-bloco" data-index="1">
+                        <h2>Preferência</h2>
+
+                        <div class="campos">
+                            <div class="select">
+                                <label for="estado">Estado</label>
+                                <select id="select_estado" class="select-estado">
+                                    <option value="">Selecione...</option>
+
+                                    <optgroup label="Norte">
+                                        <option value="AC">Acre</option>
+                                        <option value="AP">Amapá</option>
+                                        <option value="AM">Amazonas</option>
+                                        <option value="PA">Pará</option>
+                                        <option value="RO">Rondônia</option>
+                                        <option value="RR">Roraima</option>
+                                        <option value="TO">Tocantins</option>
+                                    </optgroup>
+
+                                    <optgroup label="Nordeste">
+                                        <option value="AL">Alagoas</option>
+                                        <option value="BA">Bahia</option>
+                                        <option value="CE">Ceará</option>
+                                        <option value="MA">Maranhão</option>
+                                        <option value="PB">Paraíba</option>
+                                        <option value="PE">Pernambuco</option>
+                                        <option value="PI">Piauí</option>
+                                        <option value="RN">Rio Grande do Norte</option>
+                                        <option value="SE">Sergipe</option>
+                                    </optgroup>
+
+                                    <optgroup label="Centro-Oeste">
+                                        <option value="DF">Distrito Federal</option>
+                                        <option value="GO">Goiás</option>
+                                        <option value="MT">Mato Grosso</option>
+                                        <option value="MS">Mato Grosso do Sul</option>
+                                    </optgroup>
+
+                                    <optgroup label="Sudeste">
+                                        <option value="ES">Espírito Santo</option>
+                                        <option value="MG">Minas Gerais</option>
+                                        <option value="RJ">Rio de Janeiro</option>
+                                        <option value="SP">São Paulo</option>
+                                    </optgroup>
+
+                                    <optgroup label="Sul">
+                                        <option value="PR">Paraná</option>
+                                        <option value="RS">Rio Grande do Sul</option>
+                                        <option value="SC">Santa Catarina</option>
+                                    </optgroup>
+
+
+                                </select>
+                            </div>
+
+                            <div class="select">
+                                <label for="municipio">Município</label>
+                                <input class="select_estado" type="text" id="cidadeInput" placeholder="Ex: São..."
+                                    autocomplete="off">
+                                <div id="suggestions" class="suggestions"></div>
+                            </div>
+
+                            <div class="select">
+                                <label for="setor">Setor</label>
+                                <select id="select_setor" class="select-setor">
+                                    <option value="">Selecione...</option>
+                                    <option value="Animais vivos e produtos do reino animal">Animais Vivos e Produtos do
+                                        Reino Animal</option>
+                                    <option value="Produtos do Reino Vegetal">Produtos do Reino Vegetal</option>
+                                    <option value="Gorduras e Óleos Animais ou Vegetais">Gorduras e Óleos Animais ou
+                                        Vegetais</option>
+                                    <option value="Produtos das Indústrias Alimentares; Bebidas e Tabaco">Produtos das
+                                        Indústrias Alimentares; Bebidas e Tabaco</option>
+                                    <option value="Produtos Minerais">Produtos Minerais</option>
+                                    <option value="Produtos das Indústrias Químicas">Produtos das Indústrias Químicas
+                                    </option>
+                                    <option value="Plástico e Borracha">Plástico e Borracha</option>
+                                    <option value="Peles, Couro e Obras">Peles, Couro e Obras</option>
+                                    <option value="Madeira, Carvão Vegetal e Cortiça">Madeira, Carvão Vegetal e Cortiça
+                                    </option>
+                                    <option value="Pasta de Madeira, Papel e Cartão">Pasta de Madeira, Papel e Cartão
+                                    </option>
+                                    <option value="Materiais Têxteis e Suas Obras">Materiais Têxteis e Suas Obras
+                                    </option>
+                                    <option value="Calçados, Chapéus e Semelhantes">Calçados, Chapéus e Semelhantes
+                                    </option>
+                                    <option value="Obras de Pedra, Cerâmica e Vidro">Obras de Pedra, Cerâmica e Vidro
+                                    </option>
+                                    <option value="Pérolas, Pedras Preciosas e Metais Preciosos">Pérolas, Pedras
+                                        Preciosas e Metais Preciosos</option>
+                                    <option value="Metais Comuns e Suas Obras">Metais Comuns e Suas Obras</option>
+                                    <option value="Máquina e Aparelhos, Material Elétrico">Máquina e Aparelhos, Material
+                                        Elétrico</option>
+                                    <option value="Material de Transporte">Material de Transporte</option>
+                                    <option value="Instrumento e Aparelhos de Óptica, Cinematografia e Fotografia">
+                                        Instrumento e Aparelhos de Óptica, Cinematografia e Fotografia</option>
+                                    <option value="Armas e Munições">Armas e Munições</option>
+                                    <option value="Mercadorias e Produtos Diversos">Mercadorias e Produtos Diversos
+                                    </option>
+                                    <option value="Objetos de Arte e Antiguidades">Objetos de Arte e Antiguidades
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acoes">
+                    <button class="btn-salvar" onclick="registrar_pref()">Salvar</button>
+                    <a href="dashboard.html" class="btn-cancelar" id="btn-cancelar">Cancelar</a>
+                    <a href="vizualizacaoPreferencias.html" class="btn-viz">Visualizar preferências</a>
+                </div>
+
+            </section>
+
+        </main>
+    </div>
+</body>
+
+</html>
+
+<script>
+    nome_usuario.innerHTML = sessionStorage.NOME_USUARIO
+</script>

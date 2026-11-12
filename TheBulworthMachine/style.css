@@ -1,0 +1,129 @@
+/* estilo para o corpo da página */
+body {
+    font-family: 'Narcissus', 'Trebuchet MS', 'sans-serif';
+    background: url("bully-bg.png") no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    padding: 0;
+    color: #fff;
+}
+
+/* overlay para dar contraste no fundo */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 25, 40, 0.8);
+    z-index: -1;
+}
+
+/* estilo para o contêiner principal */
+#container {
+    width: 80%;
+    max-width: 700px;
+    margin: 50px auto;
+    text-align: center;
+    background: rgba(31, 42, 68, 0.9);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.7);
+}
+
+/* estilo para o cabeçalho */
+h1 {
+    color: #FFD34E;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px #000;
+}
+
+/* Logo Bully */
+#bullylogo {
+    content: url("bully-logo.png");
+    display: block;
+    margin: 25px 15px;
+    height: 80px;
+}
+
+h3 {
+    color: #EFB661;
+    margin-top: 20px;
+}
+
+/* estilo para a entrada de texto */
+input[type="text"] {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 4px solid #FFD34E;
+    background: #fff;
+    color: #000;
+    width: 60%;
+}
+
+/* estilo para seleção e botão */
+select,
+button {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 10px solid #FFD34E;
+    margin-top: 10px;
+}
+
+select {
+    border: 2px solid #FFD34E;
+    background: #fff;
+    color: #000;
+}
+
+/* estilo para o botão */
+button {
+    background-color: #ED145B;
+    color: #FFFFFF;
+    border: none;
+    transition: 0.3s;
+    font-weight: bold;
+}
+
+/* efeito hover */
+button:hover {
+    background-color: #FFD34E;
+    color: #1F2A44;
+}
+
+/* estilo para checkboxes e labels */
+label {
+    margin-right: 15px;
+    color: #FFD34E;
+    font-weight: bold;
+}
+
+input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+/* estilo para a saída de resultados */
+#output {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 10px;
+    background: rgba(208, 211, 212, 0.9);
+    border: 5px solid #FFD34E;
+    color: #000;
+    font-weight: bold;
+    text-align: left;
+    display: none;
+}
+
+.soundtrack {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    border: 5px solid #FFD34E;
+    border-radius: 10px;
+}

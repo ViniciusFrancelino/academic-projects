@@ -1,0 +1,566 @@
+package school.sptech;
+
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.eventusermodel.ReadOnlySharedStringsTable;
+import org.apache.poi.xssf.eventusermodel.XSSFReader;
+import org.apache.poi.xssf.eventusermodel.XSSFSheetXMLHandler;
+import org.apache.poi.xssf.model.StylesTable;
+
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
+
+import javax.xml.parsers.SAXParserFactory;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.*;
+
+/**
+ * Lê os arquivos XLSX de importação/exportação do MDIC usando Apache POI
+ * no modo **SAX streaming** (XSSF Event API).
+ *
+ * Detecta automaticamente o formato do XLSX:
+ *
+ *   ► FORMATO NCM (detalhado por NCM):
+ *     CO_ANO | CO_MES | CO_NCM | CO_UNID | CO_PAIS | SG_UF_NCM | CO_VIA | CO_URF | QT_ESTAT | KG_LIQUIDO | VL_FOB
+ *     → SH4 é derivado dos 4 primeiros dígitos do CO_NCM
+ *     → CO_MUN fica NULL (não existe neste layout)
+ *
+ *   ► FORMATO MUN (por município e SH4):
+ *     CO_ANO | CO_MES | SH4 | CO_PAIS | SG_UF_MUN | CO_MUN | KG_LIQUIDO | VL_FOB
+ *     → SH4 vem direto do XLSX
+ *     → CO_MUN vem direto do XLSX
+ *
+ * Pipeline de dados:
+ *   XLSX (disco) → OPCPackage → SAX stream → SheetContentsHandler → JDBC batch insert
+ */
+public class ComexDataLoader {
+
+    private static final int BATCH_SIZE = 5000;
+
+    /** Formato detectado do XLSX */
+    private enum Formato { NCM, MUN }
+
+    // ============================================================
+    // RESULTADO DO CARREGAMENTO (classe interna)
+    // ============================================================
+
+    /**
+     * Resultado do carregamento de um arquivo XLSX.
+     * Contém os contadores finais de inserção, ignorados e erros.
+     */
+    public static class ResultadoCarregamento {
+        private final int totalLinhas;
+        private final int inseridos;
+        private final int ignorados;
+        private final int erros;
+        private final String formato;
+
+        public ResultadoCarregamento(int totalLinhas, int inseridos, int ignorados, int erros, String formato) {
+            this.totalLinhas = totalLinhas;
+            this.inseridos = inseridos;
+            this.ignorados = ignorados;
+            this.erros = erros;
+            this.formato = formato;
+        }
+
+        public int getTotalLinhas() { return totalLinhas; }
+        public int getInseridos()   { return inseridos; }
+        public int getIgnorados()   { return ignorados; }
+        public int getErros()       { return erros; }
+        public String getFormato()  { return formato; }
+
+        @Override
+        public String toString() {
+            return String.format(
+                    "ResultadoCarregamento(total=%,d, inseridos=%,d, ignorados=%,d, erros=%,d, formato=%s)",
+                    totalLinhas, inseridos, ignorados, erros, formato
+            );
+        }
+    }
+
+    // ============================================================
+    // API PÚBLICA
+    // ============================================================
+
+    public static ResultadoCarregamento carregarExportacao(Path xlsxPath, Connection conn) throws Exception {
+        return carregarDados(xlsxPath, conn, "base_exportacao", "EXPORTAÇÃO");
+    }
+
+    public static ResultadoCarregamento carregarImportacao(Path xlsxPath, Connection conn) throws Exception {
+        return carregarDados(xlsxPath, conn, "base_importacao", "IMPORTAÇÃO");
+    }
+
+    // ============================================================
+    // CARREGAMENTO COM BANCO — SAX STREAMING (baixo consumo de RAM)
+    // ============================================================
+
+    private static ResultadoCarregamento carregarDados(Path xlsxPath, Connection conn, String tabela, String tipo) throws Exception {
+        if (!Files.exists(xlsxPath)) {
+            System.err.println("[ERRO] Arquivo não encontrado: " + xlsxPath);
+            return new ResultadoCarregamento(0, 0, 0, 0, "DESCONHECIDO");
+        }
+
+        logJava log = new logJava(xlsxPath.getFileName().toString());
+
+        Set<String> sh4Conhecidos = carregarCodigosExistentes(conn, "codigo_sh4", "CO_SH4");
+        Set<String> paisConhecidos = carregarCodigosExistentes(conn, "codigo_pais", "CO_PAIS");
+
+        try (OPCPackage pkg = OPCPackage.open(xlsxPath.toFile())) {
+
+            ReadOnlySharedStringsTable strings = new ReadOnlySharedStringsTable(pkg);
+            XSSFReader xssfReader = new XSSFReader(pkg);
+            StylesTable styles = xssfReader.getStylesTable();
+
+            Iterator<InputStream> sheetsData = xssfReader.getSheetsData();
+            if (!sheetsData.hasNext()) {
+                System.err.println("[ERRO] XLSX sem planilhas!");
+                return new ResultadoCarregamento(0, 0, 0, 0, "DESCONHECIDO");
+            }
+
+            try (InputStream sheetStream = sheetsData.next()) {
+
+                RowInsertHandler handler = new RowInsertHandler(
+                        conn, tabela, tipo, log, sh4Conhecidos, paisConhecidos);
+
+                SAXParserFactory spf = SAXParserFactory.newInstance();
+                spf.setNamespaceAware(true);
+                XMLReader xmlReader = spf.newSAXParser().getXMLReader();
+                xmlReader.setContentHandler(
+                        new XSSFSheetXMLHandler(styles, strings, handler, false));
+
+                long startTime = System.currentTimeMillis();
+
+                try {
+                    xmlReader.parse(new InputSource(sheetStream));
+                } catch (Exception e) {
+                    System.err.printf("[ERRO] Falha ao processar XLSX: %s%n", e.getMessage());
+                    return new ResultadoCarregamento(0, 0, 0, 0, "DESCONHECIDO");
+                }
+
+                handler.flushBatch();
+
+                long elapsed = System.currentTimeMillis() - startTime;
+                log.sucesso(handler.getInseridos(), handler.getIgnorados());
+                log.imprimirResumo();
+
+                return new ResultadoCarregamento(
+                        handler.getTotalLinhas(),
+                        handler.getInseridos(),
+                        handler.getIgnorados(),
+                        handler.getErros(),
+                        handler.getFormato().toString()
+                );
+            }
+        }
+    }
+
+    // ============================================================
+    // SAX HANDLER — processa uma linha por vez (memória constante)
+    // ============================================================
+
+    /**
+     * Implementação de SheetContentsHandler que recebe os eventos SAX do POI.
+     * Acumula as células de cada linha em um Map, e ao final da linha
+     * faz o INSERT via JDBC batch.
+     */
+    private static class RowInsertHandler implements XSSFSheetXMLHandler.SheetContentsHandler {
+
+        private final Connection conn;
+        private final String tabela;
+        private final String tipo;
+        private final logJava log;
+        private final Set<String> sh4Conhecidos;
+        private final Set<String> paisConhecidos;
+
+        // Mapeamento: índice da coluna → nome do header
+        private final Map<Integer, String> headerMap = new LinkedHashMap<>();
+        // Células da linha atual: índice da coluna → valor string
+        private final Map<Integer, String> currentRow = new HashMap<>();
+
+        private Formato formato;
+        private PreparedStatement ps;
+        private PreparedStatement psSh4;
+        private PreparedStatement psPais;
+        private boolean autoCommitOriginal;
+
+        private int totalLinhas = 0;
+        private int inseridos = 0;
+        private int ignorados = 0;
+        private int erros = 0;
+        private boolean headerParsed = false;
+
+        RowInsertHandler(Connection conn, String tabela, String tipo, logJava log,
+                         Set<String> sh4Conhecidos, Set<String> paisConhecidos) {
+            this.conn = conn;
+            this.tabela = tabela;
+            this.tipo = tipo;
+            this.log = log;
+            this.sh4Conhecidos = sh4Conhecidos;
+            this.paisConhecidos = paisConhecidos;
+        }
+
+        // --- Getters para resultados ---
+        int getTotalLinhas() { return totalLinhas; }
+        int getInseridos()   { return inseridos; }
+        int getIgnorados()   { return ignorados; }
+        int getErros()       { return erros; }
+        Formato getFormato() { return formato; }
+
+        @Override
+        public void startRow(int rowNum) {
+            currentRow.clear();
+        }
+        @Override
+        public void endRow(int rowNum) {
+            if (currentRow.size() == 1) {
+                String unicaCelula = currentRow.values().iterator().next();
+
+                if (unicaCelula.contains(";")) {
+                    currentRow.clear();
+
+                    String[] cols = unicaCelula.replace("\"", "").split(";");
+
+                    for (int i = 0; i < cols.length; i++) {
+                        currentRow.put(i, cols[i]);
+                    }
+                }
+            }
+            if (rowNum == 0) {
+                // ► Primeira linha = header
+                parseHeader();
+                return;
+            }
+
+            // Se formato não foi detectado, pular processamento
+            if (formato == null) {
+                ignorados++;
+                return;
+            }
+
+            // ► Linha de dados
+            totalLinhas++;
+            try {
+                DadosLinha dados = extrairDadosStreaming(currentRow, headerMap, formato);
+                if (dados == null) {
+                    ignorados++;
+                    log.erro(totalLinhas, "Dados inválidos ou campos obrigatórios vazios.");
+                    return;
+                }
+
+                // Auto-inserir códigos SH4 e País desconhecidos em batch
+                // Observação: executamos os batches de FK antes do batch principal
+                // para não quebrar as constraints do banco.
+                if (!sh4Conhecidos.contains(dados.sh4)) {
+                    psSh4.setString(1, dados.sh4);
+                    psSh4.addBatch();
+                    sh4Conhecidos.add(dados.sh4);
+                }
+                if (!paisConhecidos.contains(dados.pais)) {
+                    psPais.setString(1, dados.pais);
+                    psPais.addBatch();
+                    paisConhecidos.add(dados.pais);
+                }
+
+                setarParametros(ps, dados, formato);
+                ps.addBatch();
+                inseridos++;
+
+                if (inseridos % BATCH_SIZE == 0) {
+                    executarBatches();
+                }
+
+            } catch (NumberFormatException e) {
+                erros++;
+                log.erro(totalLinhas, "Erro de formatação numérica: " + e.getMessage());
+            } catch (Exception e) {
+                erros++;
+                log.erro(totalLinhas, e.getMessage());
+            }
+        }
+
+        @Override
+        public void cell(String cellReference, String formattedValue,
+                         org.apache.poi.xssf.usermodel.XSSFComment comment) {
+            if (cellReference == null) return;
+            int col = new CellReference(cellReference).getCol();
+            currentRow.put(col, formattedValue != null ? formattedValue : "");
+        }
+
+        @Override
+        public void headerFooter(String text, boolean isHeader, String tagName) {
+            // Ignorar headers/footers do XLSX
+        }
+
+        /** Inicializa o header, detecta formato, prepara PreparedStatement */
+        private void parseHeader() {
+            if (currentRow.isEmpty()) {
+                System.err.println("[ERRO] Header vazio! A primeira linha do XLSX não tem dados.");
+                return;
+            }
+
+            for (Map.Entry<Integer, String> e : currentRow.entrySet()) {
+                headerMap.put(e.getKey(), normalizeHeader(e.getValue()));
+            }
+
+            boolean temNCM = headerMap.containsValue("CO_NCM");
+            boolean temSH4 = headerMap.containsValue("SH4");
+
+            if (temNCM) {
+                formato = Formato.NCM;
+            } else if (temSH4) {
+                formato = Formato.MUN;
+            } else {
+                System.err.println("[ERRO] Formato desconhecido! Headers encontrados: " + headerMap.values());
+                formato = null;
+                return;
+            }
+
+            String sql = montarSql(tabela, formato);
+
+            try {
+                autoCommitOriginal = conn.getAutoCommit();
+                conn.setAutoCommit(false);
+                ps = conn.prepareStatement(sql);
+                psSh4 = conn.prepareStatement(
+                        "INSERT IGNORE INTO codigo_sh4 (CO_SH4, NO_SH4_POR) VALUES (?, '')");
+                psPais = conn.prepareStatement(
+                        "INSERT IGNORE INTO codigo_pais (CO_PAIS, NO_PAIS) VALUES (?, '')");
+            } catch (Exception ex) {
+                throw new RuntimeException("Falha ao preparar SQL: " + ex.getMessage(), ex);
+            }
+
+            headerParsed = true;
+        }
+
+        /** Executa os batches pendentes respeitando a ordem das FKs antes da tabela principal. */
+        private void executarBatches() throws Exception {
+            psSh4.executeBatch();
+            psPais.executeBatch();
+            ps.executeBatch();
+            conn.commit();
+        }
+
+        /** Flush do batch restante + fechar PreparedStatements */
+        void flushBatch() {
+            if (ps == null) return;
+            try {
+                executarBatches();
+            } catch (Exception e) {
+                System.err.println("[ERRO] Falha no flush final: " + e.getMessage());
+                try {
+                    conn.rollback();
+                } catch (Exception rollbackEx) {
+                    System.err.println("[ERRO] Falha ao fazer rollback: " + rollbackEx.getMessage());
+                }
+            } finally {
+                try {
+                    fecharSilenciosamente(psSh4);
+                    fecharSilenciosamente(psPais);
+                    fecharSilenciosamente(ps);
+                    conn.setAutoCommit(autoCommitOriginal);
+                } catch (Exception e) {
+                    System.err.println("[ERRO] Falha ao restaurar autoCommit/fechar PS: " + e.getMessage());
+                }
+            }
+        }
+
+        private void fecharSilenciosamente(PreparedStatement stmt) {
+            if (stmt == null) return;
+            try {
+                stmt.close();
+            } catch (Exception e) {
+                System.err.println("[AVISO] Falha ao fechar PreparedStatement: " + e.getMessage());
+            }
+        }
+    }
+
+    // ============================================================
+    // EXTRAÇÃO DE DADOS (a partir de Map<colIndex, value>)
+    // ============================================================
+
+    /** Estrutura intermediária para dados de uma linha */
+    private static class DadosLinha {
+        int ano, mes;
+        String ncm;       // Apenas formato NCM (8 dígitos)
+        String sh4;       // Derivado do NCM ou direto do XLSX
+        String pais;
+        String uf;
+        String mun;       // Apenas formato MUN
+        String via;       // Apenas formato NCM
+        String urf;       // Apenas formato NCM
+        double qtEstat;   // Apenas formato NCM
+        double kgLiquido;
+        double vlFob;
+    }
+
+    /**
+     * Extrai dados de uma linha SAX — recebe Map de valores indexados por coluna.
+     */
+    private static DadosLinha extrairDadosStreaming(
+            Map<Integer, String> row, Map<Integer, String> headerMap, Formato formato) {
+
+        DadosLinha d = new DadosLinha();
+
+        String anoStr = getVal(row, headerMap, "CO_ANO");
+        String mesStr = getVal(row, headerMap, "CO_MES");
+
+        if (anoStr.isEmpty() || mesStr.isEmpty()) return null;
+
+        d.ano = (int) Double.parseDouble(anoStr);
+        d.mes = (int) Double.parseDouble(mesStr);
+
+        if (formato == Formato.NCM) {
+            String ncm = getVal(row, headerMap, "CO_NCM");
+            if (ncm.isEmpty() || ncm.length() < 4) return null;
+
+            d.ncm = ncm;
+            d.sh4 = ncm.substring(0, 4);
+
+            d.pais = getVal(row, headerMap, "CO_PAIS");
+            d.uf   = getVal(row, headerMap, "SG_UF_NCM");
+
+            d.via     = getVal(row, headerMap, "CO_VIA");
+            d.urf     = getVal(row, headerMap, "CO_URF");
+            d.qtEstat = parseDouble(getVal(row, headerMap, "QT_ESTAT"));
+            d.mun     = null;
+        } else {
+            d.sh4  = getVal(row, headerMap, "SH4");
+            if (d.sh4.isEmpty()) return null;
+
+            d.pais = getVal(row, headerMap, "CO_PAIS");
+            d.uf   = getVal(row, headerMap, "SG_UF_MUN");
+            d.mun  = getVal(row, headerMap, "CO_MUN");
+            d.ncm  = null;
+        }
+
+        // Padronizar SH4 para 4 dígitos
+        d.sh4 = padLeft(d.sh4, 4, '0');
+
+        // Padronizar CO_PAIS e UF
+        if (d.pais.length() > 4) d.pais = d.pais.substring(0, 4);
+        if (d.uf.length() > 2) d.uf = d.uf.substring(0, 2);
+
+        if (d.sh4.isEmpty() || d.pais.isEmpty()) return null;
+
+        d.kgLiquido = parseDouble(getVal(row, headerMap, "KG_LIQUIDO"));
+        d.vlFob     = parseDouble(getVal(row, headerMap, "VL_FOB"));
+
+        return d;
+    }
+
+    /** Busca o valor de uma coluna pelo nome do header */
+    private static String getVal(Map<Integer, String> row, Map<Integer, String> headerMap, String headerName) {
+        for (Map.Entry<Integer, String> e : headerMap.entrySet()) {
+            if (e.getValue().equals(headerName)) {
+                String v = row.get(e.getKey());
+                return v != null ? v.trim() : "";
+            }
+        }
+        return "";
+    }
+
+    private static double parseDouble(String s) {
+        if (s == null || s.isEmpty()) return 0.0;
+        try {
+            return Double.parseDouble(s.replace(",", "."));
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
+    // ============================================================
+    // SQL DINÂMICO POR FORMATO
+    // ============================================================
+
+    private static String montarSql(String tabela, Formato formato) {
+        if (formato == Formato.NCM) {
+            return String.format(
+                    "INSERT INTO %s (CO_ANO, CO_MES, CO_NCM, SH4, CO_PAIS, SG_UF_MUN, CO_VIA, CO_URF, QT_ESTAT, KG_LIQUIDO, VL_FOB) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", tabela);
+        } else {
+            return String.format(
+                    "INSERT INTO %s (CO_ANO, CO_MES, SH4, CO_PAIS, CO_MUN, SG_UF_MUN, KG_LIQUIDO, VL_FOB) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", tabela);
+        }
+    }
+
+    private static void setarParametros(PreparedStatement ps, DadosLinha d, Formato formato) throws Exception {
+        if (formato == Formato.NCM) {
+            ps.setInt(1, d.ano);
+            ps.setInt(2, d.mes);
+            ps.setString(3, d.ncm);
+            ps.setString(4, d.sh4);
+            ps.setString(5, d.pais);
+            ps.setString(6, d.uf);
+            ps.setString(7, d.via);
+            ps.setString(8, d.urf);
+            ps.setBigDecimal(9, BigDecimal.valueOf(d.qtEstat));
+            ps.setBigDecimal(10, BigDecimal.valueOf(d.kgLiquido));
+            ps.setBigDecimal(11, BigDecimal.valueOf(d.vlFob));
+        } else {
+            ps.setInt(1, d.ano);
+            ps.setInt(2, d.mes);
+            ps.setString(3, d.sh4);
+            ps.setString(4, d.pais);
+            ps.setString(5, d.mun);
+            ps.setString(6, d.uf);
+            ps.setBigDecimal(7, BigDecimal.valueOf(d.kgLiquido));
+            ps.setBigDecimal(8, BigDecimal.valueOf(d.vlFob));
+        }
+    }
+
+    // ============================================================
+    // FK AUTO-INSERT
+    // ============================================================
+
+    private static Set<String> carregarCodigosExistentes(Connection conn, String tabela, String coluna) throws Exception {
+        Set<String> codigos = new HashSet<>();
+        String sql = "SELECT " + coluna + " FROM " + tabela;
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                codigos.add(rs.getString(1));
+            }
+        }
+        return codigos;
+    }
+
+    private static void inserirCodigoSh4(Connection conn, String sh4) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT IGNORE INTO codigo_sh4 (CO_SH4, NO_SH4_POR) VALUES (?, '')")) {
+            ps.setString(1, sh4);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            System.err.println("[AVISO] Erro ao auto-inserir SH4 " + sh4 + ": " + e.getMessage());
+        }
+    }
+
+    private static void inserirCodigoPais(Connection conn, String pais) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT IGNORE INTO codigo_pais (CO_PAIS, NO_PAIS) VALUES (?, '')")) {
+            ps.setString(1, pais);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            System.err.println("[AVISO] Erro ao auto-inserir país " + pais + ": " + e.getMessage());
+        }
+    }
+
+    private static String padLeft(String s, int length, char padChar) {
+        while (s.length() < length) s = padChar + s;
+        return s;
+    }
+
+    private static String normalizeHeader(String s) {
+        if (s == null) return "";
+        return s
+                .replace('\u00A0', ' ') // remove non-breaking space (Excel LOVES this)
+                .trim()
+                .toUpperCase();
+    }
+}

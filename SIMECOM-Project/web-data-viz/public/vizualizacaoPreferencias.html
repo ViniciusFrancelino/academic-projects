@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/visualizacaoPreferencias.css">
+    <link rel="icon" href="./assets/logo_simples.png" type="image/png">
+    <title>Visualizar Preferências | SIMECOM</title>
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <a href="index.html">
+                    <img src="./assets/logo.png" alt="Simecom">
+                </a>
+            </div>
+
+            <div class="user">
+                <div class="avatar">
+                    <a href="configuracoes.html">
+                        <img src="./assets/Group 43.png">
+                    </a>
+                </div>
+                <p>Olá, <span id="nome_usuario">usuário</span>!</p>
+            </div>
+
+            <nav class="menu">
+                <ul>
+                    <li><a href="index.html">
+                            <img src="./assets/home_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="preferencias.html">
+                            <img src="./assets/check_box_padrao.png">
+                            Preferências
+                        </a>
+                    </li>
+                    <li><a href="./forum.html">
+                            <img src="./assets/chat_bubble_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Fórum
+                        </a>
+                    </li>
+                    <li><a href="dashboardMacro.html">
+                            <img src="./assets/space_dashboard_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Dashboards
+                        </a>
+                    </li>
+                    <li><a href="./configuracoes.html">
+                            <img src="./assets/icon_configuracoes.png">
+                            Configurações
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <div class="titulo">
+                <h1>Preferências</h1>
+            </div>
+
+            <div class="tabela-container">
+                <table class="tabela">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Estado</th>
+                            <th>Município</th>
+                            <th>Setor</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tabela-body" id="tabela-body"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div class="modal" id="modal"></div>
+    </div>
+
+    <script src="./js/visualizacaoPreferencias.js"></script>
+
+</body>
+
+</html>
+
+<script>
+    nome_usuario.innerHTML = sessionStorage.NOME_USUARIO
+</script>

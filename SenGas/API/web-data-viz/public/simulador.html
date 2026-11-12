@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./css/style.css">
+      <link rel="icon" href="./assets/imgs/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+
+    <title>SenGás - Simulador Financeiro</title>
+
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <img src="./assets/imgs/sengas.png" alt="">
+        </div>
+
+        <div class="nav-bar">
+            <div class="nav-item">
+                <a href="./index.html"> Home </a>
+            </div>
+            <div class="nav-item">
+                <a href="./quemSomos.html">Quem Somos</a>
+            </div>
+            <div class="nav-item">
+                <a href="./orcamento.html"> Orçamento </a>
+            </div>
+            <div class="nav-item">
+                <a href="./simulador.html"> Simulador Financeiro
+                </a>
+            </div>
+        </div>
+        <div class="nav-button">
+            <button onclick="window.location.href='./cadastro.html'" class="buttons"> Cadastrar </button>
+        </div>
+    </header>
+
+    <main class="caixa-simulador">
+        <div class="simulador">
+            <h1>Simulador Financeiro</h1>
+            <p>
+                <b> Veja como sua produção pode gerar ainda mais lucro! </b> <br> <br>
+            <div class="introducao">
+                Insira seus dados e calcule o potencial financeiro do biometano na sua operação e descubra como otimizar
+                resultados com eficiência e sustentabilidade!
+            </div>
+            </p>
+
+            <div class="input-group">
+                <b>Quantidade de metano (em m³) produzido por dia </b> <br> <br> <input id="iptProdDia" type="number">
+                <div id="div_msg"></div>
+            </div>
+            <div class="input-group">
+                <b>Preço médio de venda (R$ / m³)</b> <br> <br> <input id="iptPrecoVenda" type="number"> <br><br>
+                <div id="div_msg1"></div>
+            </div>
+
+            <div class="simular-btn">
+                <button onclick="simular()">Simular</button>
+            </div>
+        </div>
+        <div class="resultado-box">
+            <h2>Resultado da Simulação</h2>
+            <div id="resultado">
+
+            </div>
+        </div>
+    </main>
+
+     <footer>
+        <div class="footer-container">
+            <div class="footer-logo">
+                <img class="logobranca" src="./assets/imgs/logofooter.png" alt="SenGás">
+            </div>
+            <div class="footer-column">
+                <h4>Menu</h4>
+                <p><a href="./index.html">Home</a></p>
+                <p><a href="./quemSomos.html">Quem somos</a></p>
+                <p><a href="./orcamento.html">Orçamento</a></p>
+                <p><a href="./simulador.html">Simulador</a></p>
+            </div>
+            <div class="footer-column">
+                <h4>Onde estamos</h4>
+                <p>Avenida Almirante Maximiano Fonseca,<br>
+                    Zona Portuária<br>
+                    São Paulo - SP</p>
+            </div>
+
+            <div class="footer-column">
+                <h4>Contatos</h4>
+                <p>Telefone: (11) 0102-03040</p>
+                <p>Email: sengas@gmail.com.br </p>
+                <p><a href="./orcamento.html">Orçamento</a></p>
+            </div>
+
+            <div class="footer-column">
+                <h4>Redes Sociais</h4>
+                <div class="social-icons">
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+
+            </div>
+
+            <div class="footer-bottom">
+                <p>© 2025 SenGás All Rights Reserved</p>
+            </div>
+    </footer>
+
+</body>
+
+</html>
+
+<script>
+    function simular() {
+       var ProdDia = Number(iptProdDia.value);
+       var PrecoVenda = Number(iptPrecoVenda.value);
+
+       var ProdAno = ProdDia * 365; // Produção de gas anual
+       var PrecoAno = ProdAno * PrecoVenda; // Quanto ganha por ano 
+
+       var perdaFinanceira = PrecoAno * 0.03; // Perda no armazenamento (em dinheiro)
+       var lucro = PrecoAno * 0.05; // Em toda a produção com a solução (em dinheiro)
+       var multa = ProdAno * 0.05; // valor da multa
+       var economiaComSenGas = perdaFinanceira + multa // economia total se o SenGás for usado
+
+       let erro = '';  // Variável criada para validação dos campos
+       let erro1 = ''; // Variável criada para validação dos campos
+
+       // Validações dos campos
+       if (ProdDia == 0){
+              erro += '* Este campo é obrigatório.';}
+       if (PrecoVenda == 0){
+              erro1 += '* Este campo é obrigatório.';}
+       if (ProdDia < 0){
+              erro += '* Este campo só pode ser preenchido com valores positivos acima de zero.';}
+       if (PrecoVenda < 0){
+              erro1 += '* Este campo só pode ser preenchido com valores positivos acima de zero.'}
+       if (erro != '' || erro1 != '') {
+              div_msg.innerHTML =  `<b style= "color:red;">${erro}</b>`;
+              div_msg1.innerHTML = `<b style= "color:red;">${erro1}</b>`;
+       }
+       else {
+              resultado.innerHTML = `
+              <b>Receita anual:</b> ${PrecoAno.toLocaleString('pt-br', { style: "currency", currency: 'BRL' })}<br>
+              <i>(valor produzido por dia * dias no ano * preço de venda)</i><br><br>
+
+              <b>Perdas estimadas em 3%:</b> ${perdaFinanceira.toLocaleString('pt-br', { style: "currency", currency: 'BRL' })}<br>
+              <i>Por que 3%? Estima-se que empresas sem controle eficiente percam cerca de 3% da receita devido a vazamentos e desperdício de gás.<br></i><br>
+
+              <b>Multa ambiental de 5%:</b> ${multa.toLocaleString('pt-br', { style: "currency", currency: 'BRL' })}<br>
+              <i>Por que 5%? Baseado em penalidades do Sistema Brasileiro de Comércio de Emissões de Gases de Efeito Estufa (SBCE) por emissões não controladas de metano.<br></i><br>
+
+              <b> Economia com SenGás: </b> ${economiaComSenGas.toLocaleString('pt-br', { style: "currency", currency: 'BRL' })}<br>
+              <i> Valor que sua empresa deixaria de perder ao adotar o sistema SenGás.</i><br><br>
+              <div class="lucro">
+               <b>Lucro com SenGás: ${lucro.toLocaleString('pt-br', { style: "currency", currency: 'BRL' })}</b><br>
+               <i> Com o sistema SenGás, sua operação reduz perdas, evita multas, otimiza processo de compressão e armazenamento e ainda pode aumenta a eficiência da produção em 5%.</i>
+              <div/>
+               <br>  
+               <div class="simular-orc">
+                <button onclick="window.location.href='./orcamento.html'"> Solicitar Orçamento!</button>
+            </div>`
+              }
+} 
+</script>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sen Gás - Simulador Financeiro</title>
+</head>
+<body>
+    <h2>Sen Gás</h2>
+    <h3>Simulador Financeiro</h3>
+    <p>Este simulador financeiro tem como objetivo estimar os prejuízos causados por vazamentos de gases nas indústrias de biometano. O cálculo considera a média de perdas identificadas nas principais empresas de biometano e biogás do Brasil. Nossa proposta é apresentar uma solução baseada na instalação de sensores, que contribui para a redução de perdas, aumento da eficiência operacional e crescimento sustentável da sua empresa.</p>
+    <br><br>
+    <b style="color: #004830;">Produção total de biometano por dia (em m³):</b> <input id="iptProd"><br><br>
+    <b style="color: #004830;">Preço de venda do biometano (R$/m³):</b> <input id="iptPreco"><br><br>
+    <b style="color: #004830;">Porcentagem de vazamento no dia:</b> <input id="iptPorc"><br><br>
+    <b style="color: #004830;">Dias de operação por ano:</b> <input id="iptDias"><br><br>
+    <button style="color: white; background-color:rgb(131, 218, 0) ;"onclick="calcular()">Calcular</button><br>
+    <div id="div_msg"></div>
+</body>
+<script>
+    function calcular(){
+        var axProd = Number(iptProd.value);
+        var axPreco = Number(iptPreco.value);
+        var axPorc = Number(iptPorc.value);
+        var axDias = Number(iptDias.value);
+
+        var axAnual = axProd * axDias;
+        var axPrecoTotal = axAnual * axPreco;
+        var axPerda = axPrecoTotal * (axPorc / 100);
+        var axEconomia = axPerda * 0.6;
+
+
+
+        div_msg.innerHTML = `Você perde hoje: <b style="color: red;">R$${axPerda.toFixed(2)}</b> no ano. <br><br>
+        Com a <span style="color: #004830;">SenGás</span>, você economizaria: <b style="color: green;">R$${axEconomia.toFixed(2)}</b> ao ano.<br><br><br>
+        *Os dados são baseados em estudos de mercados e tecnologias LDAR, considerando variação de instalações e abordagens técnicas específicas.`
+    }
+
+</script>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./css/login.css">
+  <link rel="icon" href="./assets/imgs/logo.png" type="image/x-icon">
+  <script src="../js/login.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <title>Login</title>
+</head>
+
+<body>
+  <div class="container3" id="container3">
+    <h2 class="h2">Seja bem-vindo!</h2>
+    <p class="p">Insira seus dados pessoais e comece sua jornada conosco</p>
+    <button onclick="window.location.href='./cadastro.html'" class="botaozinho">Criar Conta</button>
+  </div>
+  <div class="container2" id="container2">
+
+    <img src="./assets/imgs/sengas.png " class="logo" alt="">
+    <br>
+    <h1 class="Entrar">Entrar</h1>
+    <br>
+    <input id="iptEmail" type="email" placeholder="Email" name="email" maxlength="95" />
+    <input id="iptSenha" type="password" placeholder="Senha" name="password" maxlength="25" />
+    <a href="" class="a">Esqueceu sua senha?</a>
+    <button onclick="entrar()" type="submit" class="bubu">Entrar</button>
+
+  </div>
+</body>
+
+</html>
+
+<script>
+
+  function entrar() {
+    var emailVar = iptEmail.value;
+    var senhaVar = iptSenha.value;
+
+    if (emailVar == "" || senhaVar == "") {
+      Swal.fire({
+        icon: "warning",
+        title: "Campos vazios",
+        text: "Preencha todos os campos!"
+      });
+      return;
+    }
+
+
+    let dadosLogin = {
+      email: emailVar,
+      senha: senhaVar
+    };
+
+
+
+    fetch("/usuarios/autenticar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(dadosLogin)
+    })
+      .then((resposta) => {
+        if (!resposta.ok) {
+          Swal.fire({
+            icon: "error",
+            title: "Login inválido",
+            text: "Email ou senha incorretos."
+          });
+          return null;
+        }
+        return resposta.json();
+      })
+      .then((json) => {
+        if (!json) return;
+
+        // SALVA USUÁRIO NA SESSION
+        localStorage.idUsuario = json.idUsuario;
+        localStorage.idEmpresa = json.idEmpresa;
+        localStorage.nivelAcesso = json.nivelAcesso;
+
+
+        Swal.fire({
+          icon: "success",
+          title: "Login efetuado!",
+          text: "Redirecionando...",
+          showConfirmButton: false,
+          timer: 1500
+        });
+
+        setTimeout(() => {
+          if (json.nivelAcesso === "admin") {
+            window.location.href = "./dashboard/admin.html";
+
+          } else if (json.nivelAcesso === "cliente") {
+            window.location.href = "./dashboard/dashboard.html";
+          } else {
+            // CASO NÃO TENHA NÍVEL DEFINIDO
+            window.location.href = "index.html";
+          }
+        }, 1200);
+
+      })
+      .catch((erro) => {
+        console.error("Erro no login:", erro);
+        Swal.fire({
+          icon: "error",
+          title: "Erro no servidor",
+          text: "Tente novamente mais tarde."
+        });
+      });
+  }
+</script>

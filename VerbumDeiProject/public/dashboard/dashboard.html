@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <link rel="shortcut icon" href="../assets/icon/VerbumDei-SemFundo-Invert.ico" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VerbumDei | Dashboard</title>
+
+    <!--ChartJs-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="./../css/dashboards.css">
+
+    <script src="../js/sessao.js"></script>
+    <script src="../js/alerta.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body onload="validarSessao(),  atualizacaoPeriodica()">
+
+    <div class="divOptionSide">
+        <div class="divOptionLogo">
+            <img src="../assets/imgs/logo-Invert.png" alt="Logo VerbumDei Invertido">
+        </div>
+
+        <div class="hello">
+            <h3>Olá, <span id="b_usuario">usuário</span>!</h3>
+        </div>
+
+        <div class="divOptionButton">
+            <a href="dashboard.html">
+                <h3>Dashboard</h3>
+            </a>
+        </div>
+
+        <div class="divOptionButton">
+            <a href="quiz.html">
+                <h3>Quiz</h3>
+            </a>
+        </div>
+
+        <div class="divOptionButton">
+            <a href="mural.html">
+                <h3>Fórum</h3>
+            </a>
+        </div>
+
+        <div class="divOptionLogout" onclick="limparSessao()">
+            <h3>Sair</h3>
+        </div>
+    </div>
+
+    <div class="divKpiGerais">
+        <span>Quiz mais Jogado: <span id="idQuizFavoritos"></span></span>
+        <span>Tentativas Quiz: <span id="idTentativas"></span></span>
+        <span>Porcentual de acertos: <span id="idPorcentual"></span></span>
+    </div>
+
+    <div class="divGraficosGerais">
+        <div class="divGrafico">
+            <canvas id="myChart" style="width: 400%;"></canvas>
+        </div>
+    </div>
+
+</body>
+</html>
+
+<script>
+
+    b_usuario.innerHTML = sessionStorage.NOME_USUARIO;
+    const firtsGraf = document.getElementById('myChart');
+    let proximaAtualizacao;
+
+    window.onload = obterDados();
+
+    function obterDados() {
+
+        var idUsuario = sessionStorage.ID_USUARIO;
+        
+        // Obter dados para KPIs da dashboard
+        fetch(`/dash/dash/${idUsuario}`, { cache: 'no-store' })
+            .then(function (response) {
+                if (response.ok) {
+                    response.json().then(function (resposta) {
+                        console.log("KPI recebida:", resposta);
+                        plotarKpis(resposta); 
+                    });
+                } else {
+                    console.error('Nenhum dado encontrado');
+                }
+            })
+            .catch(function (erro) {
+                console.error(`Erro ao Obter KPIs: ${error.message}`);
+            
+            });
+
+
+        fetch(`/dash/graficos/${idUsuario}`, { cache: 'no-store' })
+            .then(function (response) {
+                if (response.ok) {
+                    response.json().then(function (resposta) {
+                        console.log(`Dados Recebidos:`, resposta);
+                        resposta.reverse();
+                        
+                        plotarGrafico(resposta, idUsuario);
+                    });
+                } else {
+                    console.log("Nenhum Dado Encontrado!");
+                }
+            })
+            .catch(function (error) {
+                console.error(`Erro na Obtenção de dados do Grafico: ${error.message}`);
+            });
+    }
+
+    function plotarGrafico(resposta, idUsuario) {
+
+        console.log('iniciando plotagem do gráfico...');
+
+        // Criando estrutura para plotar gráfico - labels
+        let labels = ["pontuacao", "tipoQuiz"];
+
+        // Criando estrutura para plotar gráfico - dados
+        let dados = {
+            labels: labels,
+            datasets: [{
+                label: 'pontuacao',
+                data: [],
+                fill: false,
+                backgroundColor: '#43260c',
+                tension: 0.1
+            },
+            {
+                label: 'tipoQuiz',
+                data: [],
+                fill: false,
+                backgroundColor: '#43260c',
+                tension: 0.1
+            }]
+        };
+
+        console.log('----------------------------------------------')
+        console.log('Estes dados foram recebidos pela funcao "obterDadosGrafico" e passados para "plotarGrafico":')
+        console.log(resposta)
+
+        // Inserindo valores recebidos em estrutura para plotar o gráfico
+        for (i = 0; i < resposta.length; i++) {
+            var registro = resposta[i];
+            // labels.push(registro.momento_grafico);
+            dados.datasets[0].data.push(registro.pontuacao);
+            dados.datasets[1].data.push(registro.tipoQuiz);
+
+            console.log(resposta[i]);
+        }
+
+        console.log('----------------------------------------------')
+        console.log('O gráfico será plotado com os respectivos valores:')
+        console.log('Labels:')
+        console.log(labels)
+        console.log('Dados:')
+        console.log(dados.datasets)
+        console.log('----------------------------------------------')
+
+        // Criando estrutura para plotar gráfico - config
+        const config = {
+            type: 'bar',
+            data: dados,
+            Option: {
+                maintainAspectRatio: false,
+                resposive: true
+            }
+        };
+
+        // Adicionando gráfico criado em div na tela
+        let myChart = new Chart(
+            document.getElementById(`myChart`),
+            config
+        );
+    }
+
+    function plotarKpis(resposta) {
+
+        if (resposta[0].quizFavoritos == 0 || resposta[0].quizFavoritos == null || resposta[0].quizFavoritos == ''){
+            idQuizFavoritos.innerHTML = '';
+        }else if (resposta[0].TentativasRealizadas == 0|| resposta[0].TentativasRealizadas == null || resposta[0].TentativasRealizadas == ''){
+            idTentativas.innerHTML = '';
+        }else if (resposta[0].porcentual == 0 || resposta[0].porcentual == null || resposta[0].porcentual == ''){
+            idPorcentual.innerHTML = '';
+        }else {
+            idQuizFavoritos.innerHTML = `${resposta[0].quizFavoritos}`;
+            idTentativas.innerHTML = `${resposta[0].TentativasRealizadas}`;
+            idPorcentual.innerHTML = `${resposta[0].porcentual}%`;
+        }
+        
+        console.log("KPIs recebidas da API:", resposta);
+    }
+
+</script>

@@ -1,0 +1,44 @@
+var ambiente_processo = "producao";
+// var ambiente_processo = 'desenvolvimento';
+
+var caminho_env = ambiente_processo === "producao" ? ".env" : ".env.dev";
+
+require("dotenv").config({ path: ".env" });
+
+var express = require("express");
+var cors = require("cors");
+var path = require("path");
+var PORTA_APP = process.env.APP_PORT;
+var HOST_APP = process.env.APP_HOST;
+
+var app = express();
+
+var indexRouter = require("./src/routes/index");
+var usersRouter = require("./src/routes/users");
+var preferenciasRouter = require("./src/routes/preferencias");
+var preferencesRouter = require("./src/routes/preferences");
+var forumRouter = require("./src/routes/forum");
+var adminRouter = require("./src/routes/admin");
+var setoresRouter = require("./src/routes/setores");
+var municipiosRouter = require("./src/routes/municipios");
+var slackEventsRouter = require("./src/routes/slackEvents");
+var relatorioRouter = require("./src/routes/relatorio");
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use("/", indexRouter);
+app.use("/users", usersRouter);
+app.use("/preferencias", preferenciasRouter);
+app.use("/preference", preferencesRouter);
+app.use("/forum", forumRouter);
+app.use("/admin", adminRouter);
+app.use("/setores", setoresRouter);
+app.use("/municipios", municipiosRouter);
+app.use("/slackEvents", slackEventsRouter);
+app.use("/relatorio", relatorioRouter);
+
+app.listen(PORTA_APP, function () {
+  console.log(`Servidor Rodando Em: http://${HOST_APP}:${PORTA_APP} :`);
+});

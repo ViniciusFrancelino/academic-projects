@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/configuracoes.css">
+    <link rel="icon" href="./assets/logo_simples.png" type="image/png">
+    <title>Configurações de Perfil | SIMECOM</title>
+    <script src="./js/configura.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <a href="index.html">
+                    <img src="./assets/logo.png" alt="Simecom">
+                </a>
+            </div>
+
+            <div class="user">
+                <div class="avatar">
+                    <a href="configuracoes.html">
+                        <img src="./assets/Group 43.png">
+                    </a>
+                </div>
+                <p>Olá, <span id="nome_usuario">usuário</span>!</p>
+            </div>
+
+            <nav class="menu">
+                <ul>
+                    <li><a href="index.html">
+                            <img src="./assets/home_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="preferencias.html">
+                            <img src="./assets/check_box_padrao.png">
+                            Preferências
+                        </a>
+                    </li>
+                    <li><a href="./forum.html">
+                            <img src="./assets/chat_bubble_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Fórum
+                        </a>
+                    </li>
+                    <li><a href="./dashboardSetor.html">
+                            <img src="./assets/space_dashboard_24dp_0B3C5D_FILL0_wght400_GRAD0_opsz24 1.png">
+                            Dashboards
+                        </a>
+                    </li>
+                    <li><a href="./configuracoes.html">
+                            <img src="./assets/icon_configuracoes.png">
+                            Configurações
+                        </a>
+                    </li>
+                    <li id="dissapear"><a href="./configuracoes_adm.html">
+                            <img src="./assets/config_adm.png">
+                            Área do Administrador
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+
+            <div class="titulo">
+                <h1>Configurações de Perfil</h1>
+            </div>
+
+            <div class="card">
+                <h2>Dados Pessoais</h2>
+
+                <div class="informacoes">
+                    <div class="nome">
+                        <h4>Nome</h4>
+                        <p id="nome_configurar">Nome Exemplo</p>
+                        <input id="nome_input" type="text" placeholder="Nome Antigo">
+
+                    </div>
+
+                    <div class="email">
+                        <h4>Email</h4>
+                        <p id="email_configurar">email@exemplo.com</p>
+                        <input id="email_input" type="text" placeholder="Email Antigo">
+
+                    </div>
+
+                    <div class="senha">
+                        <h4>Senha</h4>
+                        <p id="senha_configurar">********</p>
+                        <input id="senha_input" type="text" placeholder="Senha Antiga">
+                    </div>
+
+                    <div class="acoes">
+                        <button class="btn-editar" onclick="editar()" id="btn_editar">Editar informações</button>
+                        <button class="btn-confirmar" onclick="confirminfo()" id="btn_confirmar_info">Confirmar</button>
+
+                    </div>
+
+                </div>
+            </div>
+            <button class="btn-deletar" onclick="check_del()" id="btn-deletar">Deletar conta</button>
+            <button class="btn-confirmar" onclick="confirm_del()" id="btn_confirmar_del">Confirmar</button>
+        </main>
+</body>
+
+</html>
+<script>
+    nome_usuario.innerHTML = sessionStorage.NOME_USUARIO
+</script>
